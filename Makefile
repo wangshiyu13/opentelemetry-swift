@@ -2,20 +2,26 @@ PROJECT_NAME="opentelemetry-swift-Package"
 
 XCODEBUILD_OPTIONS_IOS=\
 	-configuration Debug \
-	-destination platform='iOS Simulator,name=iPhone 14,OS=latest' \
+	-destination platform='iOS Simulator,name=iPhone 16,OS=18.2' \
 	-scheme $(PROJECT_NAME) \
+	-test-iterations 5 \
+    -retry-tests-on-failure \
 	-workspace .
 
 XCODEBUILD_OPTIONS_TVOS=\
 	-configuration Debug \
 	-destination platform='tvOS Simulator,name=Apple TV 4K (3rd generation),OS=latest' \
 	-scheme $(PROJECT_NAME) \
+	-test-iterations 5 \
+    -retry-tests-on-failure \
 	-workspace .
 
 XCODEBUILD_OPTIONS_WATCHOS=\
 	-configuration Debug \
-	-destination platform='watchOS Simulator,name=Apple Watch Series 8 (45mm),OS=latest' \
+	-destination platform='watchOS Simulator,name=Apple Watch Series 10 (46mm),OS=11.2' \
 	-scheme $(PROJECT_NAME) \
+	-test-iterations 5 \
+    -retry-tests-on-failure \
 	-workspace .
 
 .PHONY: setup-brew
@@ -44,7 +50,7 @@ build-for-testing-tvos:
 
 .PHONY: build-for-testing-watchos
 build-for-testing-watchos:
-	set -o pipefail && xcodebuild $(XCODEBUILD_OPTIONS_WATCHOS) build-for-testing | xcbeautify
+	set -o pipefail && xcodebuild OTHER_LDFLAGS="$(OTHER_LDFLAGS) -fprofile-instr-generate" $(XCODEBUILD_OPTIONS_WATCHOS) build-for-testing | xcbeautify
 
 .PHONY: test-ios
 test-ios:

@@ -8,7 +8,7 @@ import XCTest
 
 class FileTests: XCTestCase {
     private let fileManager = FileManager.default
-    private let temporaryDirectory = obtainUniqueTemporaryDirectory()
+    @UniqueTemporaryDirectory private var temporaryDirectory: Directory
 
     override func setUp() {
         super.setUp()
@@ -71,7 +71,7 @@ class FileTests: XCTestCase {
         XCTAssertEqual(try file.size(), 15)
     }
 
-    func testWhenIOExceptionHappens_itThrowsWhenWritting() throws {
+    func testWhenIOExceptionHappens_itThrowsWhenWriting() throws {
         let file = try temporaryDirectory.createFile(named: "file")
         try file.delete()
 

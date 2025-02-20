@@ -61,7 +61,7 @@ class URLSessionLogger {
         if let port = request.url?.port {
             attributes[SemanticAttributes.netPeerPort.rawValue] = AttributeValue.int(port)
         }
-        
+
         if let bodySize = request.httpBody?.count {
             attributes[SemanticAttributes.httpRequestBodySize.rawValue] = AttributeValue.int(bodySize)
         }
@@ -111,7 +111,7 @@ class URLSessionLogger {
         }
 
         let statusCode = httpResponse.statusCode
-        span.setAttribute(key: SemanticAttributes.httpStatusCode.rawValue, 
+        span.setAttribute(key: SemanticAttributes.httpStatusCode.rawValue,
                           value: AttributeValue.int(statusCode))
         span.status = statusForStatusCode(code: statusCode)
 
@@ -157,10 +157,17 @@ class URLSessionLogger {
             return nil
         }
         instrumentation.configuration.injectCustomHeaders?(&request, span)
+        let customBaggage = instrumentation.configuration.baggageProvider?(&request, span)
+
         var instrumentedRequest = request
-        objc_setAssociatedObject(instrumentedRequest, &URLSessionInstrumentation.instrumentedKey, true, .OBJC_ASSOCIATION_COPY_NONATOMIC)
+        objc_setAssociatedObject(instrumentedRequest, URLSessionInstrumentation.instrumentedKey, true, .OBJC_ASSOCIATION_COPY_NONATOMIC)
         let propagators = OpenTelemetry.instance.propagators
-        var traceHeaders = tracePropagationHTTPHeaders(span: span, textMapPropagator: propagators.textMapPropagator, textMapBaggagePropagator: propagators.textMapBaggagePropagator)
+
+        var traceHeaders = tracePropagationHTTPHeaders(span: span,
+                                                       customBaggage: customBaggage,
+                                                       textMapPropagator: propagators.textMapPropagator,
+                                                       textMapBaggagePropagator: propagators.textMapBaggagePropagator)
+
         if let originalHeaders = request.allHTTPHeaderFields {
             traceHeaders.merge(originalHeaders) { _, new in new }
         }
@@ -168,7 +175,7 @@ class URLSessionLogger {
         return instrumentedRequest
     }
 
-    private static func tracePropagationHTTPHeaders(span: Span?, textMapPropagator: TextMapPropagator, textMapBaggagePropagator: TextMapBaggagePropagator) -> [String: String] {
+    private static func tracePropagationHTTPHeaders(span: Span?, customBaggage: Baggage?, textMapPropagator: TextMapPropagator, textMapBaggagePropagator: TextMapBaggagePropagator) -> [String: String] {
         var headers = [String: String]()
 
         struct HeaderSetter: Setter {
@@ -182,9 +189,19 @@ class URLSessionLogger {
         }
         textMapPropagator.inject(spanContext: currentSpan.context, carrier: &headers, setter: HeaderSetter())
 
-        if let baggage = OpenTelemetry.instance.contextProvider.activeBaggage {
-            textMapBaggagePropagator.inject(baggage: baggage, carrier: &headers, setter: HeaderSetter())
+        let baggageBuilder = OpenTelemetry.instance.baggageManager.baggageBuilder()
+
+        if let activeBaggage = OpenTelemetry.instance.contextProvider.activeBaggage {
+            activeBaggage.getEntries().forEach { baggageBuilder.put(key: $0.key, value: $0.value, metadata: $0.metadata) }
         }
+
+        if let customBaggage {
+            customBaggage.getEntries().forEach { baggageBuilder.put(key: $0.key, value: $0.value, metadata: $0.metadata) }
+        }
+
+        let combinedBaggage = baggageBuilder.build()
+        textMapBaggagePropagator.inject(baggage: combinedBaggage, carrier: &headers, setter: HeaderSetter())
+
         return headers
     }
 }

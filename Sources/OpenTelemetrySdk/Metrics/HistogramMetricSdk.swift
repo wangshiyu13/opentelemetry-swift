@@ -9,20 +9,24 @@ import OpenTelemetryApi
 internal class HistogramMetricSdk<T: SignedNumeric & Comparable>: HistogramMetric {
     public private(set) var boundInstruments = [LabelSet: BoundHistogramMetricSdkBase<T>]()
     let metricName: String
-    let explicitBoundaries: Array<T>?
+    let explicitBoundaries: [T]?
+    let bindUnbindLock = Lock()
 
-    init(name: String, explicitBoundaries: Array<T>? = nil) {
+    init(name: String, explicitBoundaries: [T]? = nil) {
         metricName = name
         self.explicitBoundaries = explicitBoundaries
     }
 
     func bind(labelset: LabelSet) -> BoundHistogramMetric<T> {
-        var boundInstrument = boundInstruments[labelset]
-        if boundInstrument == nil {
-            boundInstrument = createMetric()
-            boundInstruments[labelset] = boundInstrument!
+        bindUnbindLock.withLock {
+            var boundInstrument = boundInstruments[labelset]
+            if boundInstrument == nil {
+                boundInstrument = createMetric()
+                boundInstruments[labelset] = boundInstrument!
+            }
+
+            return boundInstrument!
         }
-        return boundInstrument!
     }
 
     func bind(labels: [String: String]) -> BoundHistogramMetric<T> {

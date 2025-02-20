@@ -2,7 +2,7 @@
 
 This package captures the network calls produced by URLSession.
 
-This instrumentation relies on the global tracer provider in the `OpenTelementry` object. Custom global tracer providers must be initialized and set prior to initializing this instrumentation. 
+This instrumentation relies on the global tracer provider in the `OpenTelemetry` object. Custom global tracer providers must be initialized and set prior to initializing this instrumentation. 
 
 ## Usage 
 
@@ -28,4 +28,5 @@ This behaviour can be modified or augmented by using the optional callbacks defi
 
 `receivedError: ((Error, DataOrFile?, HTTPStatus, Span) -> Void)?` -  Called after an error is received,  it allows to add extra information to the Span
 
+`baggageProvider: ((inout URLRequest, Span) -> (Baggage)?)?`: Provides baggage instance for instrumented requests that is merged with active baggage. The callback receives URLRequest and Span parameters to create dynamic baggage based on request context. The resulting baggage is injected into request headers using the configured propagator.
 

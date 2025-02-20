@@ -6,11 +6,12 @@ import Foundation
 
 import OpenTelemetryApi
 
+@available(*, deprecated, renamed: "StableMeterProviderBuilder")
 public class MeterProviderBuilder {
-    public private(set) var resource : Resource = Resource()
-    public private(set) var metricExporter : MetricExporter = NoopMetricExporter()
-    public private(set) var metricPushInterval : TimeInterval = MeterProviderSdk.defaultPushInterval
-    public private(set) var metricProcessor : MetricProcessor = NoopMetricProcessor()
+    public private(set) var resource: Resource = Resource()
+    public private(set) var metricExporter: MetricExporter = NoopMetricExporter()
+    public private(set) var metricPushInterval: TimeInterval = MeterProviderSdk.defaultPushInterval
+    public private(set) var metricProcessor: MetricProcessor = NoopMetricProcessor()
 
     public init() {}
 
@@ -35,7 +36,6 @@ public class MeterProviderBuilder {
     }
 
     public func build() -> MeterProvider {
-        return MeterProviderSdk(metricProcessor:metricProcessor, metricExporter: metricExporter, metricPushInterval: metricPushInterval, resource: resource)
+        return MeterProviderSdk(metricProcessor: metricProcessor, metricExporter: metricExporter, metricPushInterval: metricPushInterval, resource: resource)
     }
 }
-

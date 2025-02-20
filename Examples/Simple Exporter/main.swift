@@ -21,9 +21,9 @@ let instrumentationScopeName = "SimpleExporter"
 let instrumentationScopeVersion = "semver:0.1.0"
 
 var tracer: TracerSdk
-let jaegerCollectorAdress = "localhost"
-let jaegerExporter = JaegerSpanExporter(serviceName: "SimpleExporter", collectorAddress: jaegerCollectorAdress)
-let stdoutExporter = StdoutExporter()
+let jaegerCollectorAddress = "localhost"
+let jaegerExporter = JaegerSpanExporter(serviceName: "SimpleExporter", collectorAddress: jaegerCollectorAddress)
+let stdoutExporter = StdoutSpanExporter()
 
 // let zipkinExporterOptions = ZipkinTraceExporterOptions()
 // let zipkinExporter = ZipkinTraceExporter(options: zipkinExporterOptions)

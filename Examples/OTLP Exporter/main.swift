@@ -32,7 +32,7 @@ let configuration = ClientConnection.Configuration.default(
 let client = ClientConnection(configuration: configuration)
 
 let otlpTraceExporter = OtlpTraceExporter(channel: client)
-let stdoutExporter = StdoutExporter()
+let stdoutExporter = StdoutSpanExporter()
 let spanExporter = MultiSpanExporter(spanExporters: [otlpTraceExporter, stdoutExporter])
 
 let spanProcessor = SimpleSpanProcessor(spanExporter: spanExporter)
@@ -43,7 +43,6 @@ OpenTelemetry.registerTracerProvider(tracerProvider:
 )
 
 let tracer = OpenTelemetry.instance.tracerProvider.get(instrumentationName: instrumentationScopeName, instrumentationVersion: instrumentationScopeVersion)
-
 
 if #available(macOS 10.14, *), #available(iOS 12.0, *) {
     let tracerProviderSDK = OpenTelemetry.instance.tracerProvider as? TracerProviderSdk
@@ -87,7 +86,6 @@ let processor = MetricProcessorSdk()
 let meterProvider = MeterProviderSdk(metricProcessor: processor, metricExporter: otlpMetricExporter, metricPushInterval: 0.1)
 
 OpenTelemetry.registerMeterProvider(meterProvider: meterProvider)
-
 
 let labels1 = ["dim1": "value1"]
 
